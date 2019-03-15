@@ -1,0 +1,3 @@
+@ rem aws apigateway test-invoke-method --rest-api-id q16zz537xe --resource-id aa440h --http-method POST --path-with-query-string "" --body file://create_order_dynamodb_input.json
+@ rem aws apigateway test-invoke-method --rest-api-id q16zz537xe --resource-id i01793 --http-method POST --path-with-query-string "" --body file://create_store_dynamodb_input.json
+aws apigateway test-invoke-method --rest-api-id q16zz537xe --resource-id i01793 --http-method GET --path-with-query-string ""
