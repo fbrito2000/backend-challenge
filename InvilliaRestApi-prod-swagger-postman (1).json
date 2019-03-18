@@ -1,0 +1,246 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "2019-03-18T04:55:04Z",
+    "title": "InvilliaRestApi"
+  },
+  "host": "q16zz537xe.execute-api.us-east-1.amazonaws.com",
+  "basePath": "/prod",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/order": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            }
+          }
+        },
+        "security": [
+          {
+            "sigv4": []
+          }
+        ],
+        "x-postman-meta": {
+          "helperAttributes": {
+            "saveHelper": true,
+            "secretKey": "{{aws_secret_access_key}}",
+            "accessKey": "{{aws_access_key_id}}"
+          },
+          "headers": "Content-Type: application/json\n",
+          "currentHelper": "awsSigV4"
+        }
+      },
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response"
+          }
+        },
+        "security": [
+          {
+            "sigv4": []
+          }
+        ],
+        "x-postman-meta": {
+          "helperAttributes": {
+            "saveHelper": true,
+            "secretKey": "{{aws_secret_access_key}}",
+            "accessKey": "{{aws_access_key_id}}"
+          },
+          "headers": "Content-Type: application/json\n",
+          "currentHelper": "awsSigV4"
+        }
+      }
+    },
+    "/order/{id}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            }
+          }
+        },
+        "security": [
+          {
+            "sigv4": []
+          }
+        ],
+        "x-postman-meta": {
+          "helperAttributes": {
+            "saveHelper": true,
+            "secretKey": "{{aws_secret_access_key}}",
+            "accessKey": "{{aws_access_key_id}}"
+          },
+          "headers": "Content-Type: application/json\n",
+          "currentHelper": "awsSigV4"
+        }
+      }
+    },
+    "/order/{id}/payment": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            }
+          }
+        },
+        "security": [
+          {
+            "sigv4": []
+          }
+        ],
+        "x-postman-meta": {
+          "helperAttributes": {
+            "saveHelper": true,
+            "secretKey": "{{aws_secret_access_key}}",
+            "accessKey": "{{aws_access_key_id}}"
+          },
+          "headers": "Content-Type: application/json\n",
+          "currentHelper": "awsSigV4"
+        }
+      },
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            }
+          }
+        },
+        "security": [
+          {
+            "sigv4": []
+          }
+        ],
+        "x-postman-meta": {
+          "helperAttributes": {
+            "saveHelper": true,
+            "secretKey": "{{aws_secret_access_key}}",
+            "accessKey": "{{aws_access_key_id}}"
+          },
+          "headers": "Content-Type: application/json\n",
+          "currentHelper": "awsSigV4"
+        }
+      }
+    },
+    "/store": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            }
+          }
+        },
+        "security": [
+          {
+            "sigv4": []
+          }
+        ],
+        "x-postman-meta": {
+          "helperAttributes": {
+            "saveHelper": true,
+            "secretKey": "{{aws_secret_access_key}}",
+            "accessKey": "{{aws_access_key_id}}"
+          },
+          "headers": "Content-Type: application/json\n",
+          "currentHelper": "awsSigV4"
+        }
+      },
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "200 response",
+            "schema": {
+              "$ref": "#/definitions/Empty"
+            }
+          }
+        },
+        "security": [
+          {
+            "sigv4": []
+          }
+        ],
+        "x-postman-meta": {
+          "helperAttributes": {
+            "saveHelper": true,
+            "secretKey": "{{aws_secret_access_key}}",
+            "accessKey": "{{aws_access_key_id}}"
+          },
+          "headers": "Content-Type: application/json\n",
+          "currentHelper": "awsSigV4"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "sigv4": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "awsSigv4"
+    }
+  },
+  "definitions": {
+    "Empty": {
+      "type": "object",
+      "title": "Empty Schema"
+    }
+  }
+}
