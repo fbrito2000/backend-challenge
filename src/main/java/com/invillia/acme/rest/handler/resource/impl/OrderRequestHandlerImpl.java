@@ -13,6 +13,7 @@ import com.invillia.acme.rest.enums.OrderServiceFactoryEnum;
 import com.invillia.acme.rest.exception.DataAccessException;
 import com.invillia.acme.rest.exception.HTTPMethodNotImplemeted;
 import com.invillia.acme.rest.exception.ValidationException;
+import com.invillia.acme.rest.filter.OrderFilter;
 import com.invillia.acme.rest.handler.RestRequestHandler;
 import com.invillia.acme.rest.handler.resource.RestResourceHandler;
 import com.invillia.acme.rest.model.Order;
@@ -31,65 +32,45 @@ public class OrderRequestHandlerImpl extends RestRequestHandler implements RestR
 
 	public OrderRequestHandlerImpl(RestRequestHandler parent) {
 		super(parent);
-		// TODO Auto-generated constructor stub
 	}
 
-	private JSONObject handlePost(HttpRequest request, Context context) {
+	private JSONObject handlePost(HttpRequest request, Context context) throws DataAccessException, ValidationException {
 
 		JSONObjectResponseBuilder responseBuilder = null;
 
-		String requestBody = (String) request.getBody();
-		JSONObject orderJSONObject;
-
-		try {
-			if (!StringUtils.isNullOrEmpty(requestBody)) {
-				orderJSONObject = (JSONObject) PARSER.parse((String) request.getBody());
-			} else {
-				orderJSONObject = null;
-			}
-
-			if (orderJSONObject == null) {
-				ValidationException ve = new ValidationException();
-				ve.addMessage("body is missing");
-				responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, ve);
-			} else {
-				Order order = orderService.createOrUpdate(transferObject.toPojo(orderJSONObject, false)); 
-
-				List<JSONObject> orderJSONObjectList = new ArrayList<JSONObject>();
-				orderJSONObjectList.add(transferObject.toJsonObject(order));
-				responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_CREATED, null, orderJSONObjectList, null);
-
-			}
-		} catch (DataAccessException e) {
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_INTERNAL_SERVER_ERROR, null, null, e);
-		} catch (ValidationException e) {
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, e);
-		} catch (ParseException e) {
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, e);
+		if (request.getBody() == null) {
+			ValidationException ve = new ValidationException();
+			ve.addMessage("request body is missing. It should contain Json data for order creation.");
+			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, ve);
+		} else {
+			Order order = orderService.createOrUpdate(transferObject.toModel(request.getBody(), request.getPathParameters(), false));
+			List<JSONObject> orderJSONObjectList = new ArrayList<JSONObject>();
+			orderJSONObjectList.add(transferObject.toJsonObject(order));
+			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_CREATED, null, orderJSONObjectList, null);
 		}
 		return responseBuilder.build();
 	}
-	private JSONObject handleGet(HttpRequest request, Context context) {
+
+	private JSONObject handleGet(HttpRequest request, Context context) throws ValidationException, DataAccessException {
 		JSONObjectResponseBuilder responseBuilder = null;
 
-		Order orderQuery = new Order();
-		if (!StringUtils.isNullOrEmpty(request.getQueryStringParameters().get("address"))) {
-			orderQuery.setAddress((String) request.getQueryStringParameters().get("address"));
-		}
-		if (!StringUtils.isNullOrEmpty(request.getQueryStringParameters().get("id"))) {
-			orderQuery.setId((String) request.getQueryStringParameters().get("id"));
-		}
-		try {
-			List<Order> orders = this.orderService.query(orderQuery);
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_OK, null, transferObject.toJsonObjectList(orders), null);
-		} catch (DataAccessException e) {
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_INTERNAL_SERVER_ERROR, null, null, e);
-		}
+		List<Order> orders;
+		OrderFilter filter = transferObject.toFilter(request.getQueryStringParameters(), request.getPathParameters());
+
+		// If storeName and date interval were provided, will call query by index
+		// (faster)
+		//if (!StringUtils.isNullOrEmpty(filter.getStoreName()) && filter.getInitialDate() != null && filter.getFinalDate() != null) {
+		//	orders = orderService.query(filter.getStoreName(), filter.getId(), filter.getInitialDate(), filter.getFinalDate(), filter.getSituation());
+		//} else {
+			orders = orderService.query(filter);
+		//}
+		responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_OK, null, transferObject.toJsonObjectList(orders), null);
+
 		return responseBuilder.build();
 	}
 
 	@Override
-	public JSONObject executeMethod(HttpRequest request, Context context) {
+	public JSONObject executeMethod(HttpRequest request, Context context) throws DataAccessException, ValidationException {
 		switch (request.getHttpMethod()) {
 		case (HttpRequest.HTTP_METHOD_POST):
 			return handlePost(request, context);

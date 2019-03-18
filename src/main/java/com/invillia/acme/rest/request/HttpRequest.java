@@ -16,10 +16,21 @@ public class HttpRequest {
 	
 	private Map<String, String> queryStringParameters = new HashMap<String, String>();
 	private Map<String, String> pathParameters = new HashMap<String, String>();
+	private Map<String, String> headers = new HashMap<String,String>();
 	private String path = "";
+	private String resource = "";
 	private String httpMethod = "";
-	private Object body = null;
+	private JSONObject body = null;
 	
+	public Map<String, String> getHeaders() {
+		return headers;
+	}
+	public void setHeaders(Map<String, String> headers) {
+		this.headers = headers;
+	}
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
 	public Map<String, String> getQueryStringParameters() {
 		return queryStringParameters;
 	}
@@ -44,10 +55,17 @@ public class HttpRequest {
 	public void setHttpMethod(String httpMethod) {
 		this.httpMethod = httpMethod;
 	}
-	public Object getBody() {
+	public JSONObject getBody() {
 		return body;
 	}
-	public void setBody(Object body) {
+	public void setBody(JSONObject body) {
 		this.body = body;
 	}
+	public String getResource() {
+		return resource;
+	}
+	public void setResource(String resource) {
+		this.resource = resource;
+	}
+	
 }

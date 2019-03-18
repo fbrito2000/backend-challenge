@@ -1,26 +1,27 @@
 package com.invillia.acme.rest.to;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.json.simple.JSONObject;
 
 import com.amazonaws.util.CollectionUtils;
 import com.invillia.acme.rest.exception.ValidationException;
+import com.invillia.acme.rest.filter.StoreFilter;
 import com.invillia.acme.rest.model.Store;
 
 public class StoreTO {
 
-	public Store toPojo(JSONObject jsonObject) throws ValidationException {
+	public Store toModel(JSONObject body) throws ValidationException {
 		
-		System.out.println("JSONOBJECT:\n\n" + jsonObject + "\n\n");
+		System.out.println("Store.toModel(JSONObject): body --> \n" + body);
 		//validate JSON request body Input
 		List<String> messages = new ArrayList<String>();
-		if (jsonObject.get("name") == null) {
+		if (body.get("name") == null) {
 			messages.add("store: Field 'name' is mandatory.");
 		}
-		if (jsonObject.get("address") == null) {
+		if (body.get("address") == null) {
 			messages.add("store: Field 'address' is mandatory.");
 		}
 		if (!messages.isEmpty()) {
@@ -28,14 +29,27 @@ public class StoreTO {
 		}
 		
 		Store store = new Store();
-		store.setName((String)jsonObject.get("name"));
-		store.setAddress((String)jsonObject.get("address"));
+		store.setName((String)body.get("name"));
+		store.setAddress((String)body.get("address"));
 
+		System.out.println("Store.toModel(JSONObject): store --> \n" + store);
 		return store;		
-
-
 	}
 
+	public StoreFilter toFilter(Map queryStringParameters, Map pathParameters) {
+		
+		System.out.println("StoreTO.toFilter(Map) --> queryStringParameters:\n" + queryStringParameters);
+		System.out.println("StoreTO.toFilter(Map) --> pathParameters:\n" + pathParameters);
+
+		//create the filter object
+		StoreFilter filter = new StoreFilter();
+		filter.setName((String)queryStringParameters.get("name"));
+		filter.setAddress((String)queryStringParameters.get("address"));
+
+		return filter;		
+
+	}
+	
 	public JSONObject toJsonObject(Store dataObject) {
 		JSONObject storeJSONObject = new JSONObject();
 

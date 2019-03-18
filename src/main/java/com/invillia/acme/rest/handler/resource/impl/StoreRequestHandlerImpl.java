@@ -5,15 +5,13 @@ import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.util.StringUtils;
 import com.invillia.acme.rest.enums.StoreServiceFactoryEnum;
 import com.invillia.acme.rest.exception.DataAccessException;
 import com.invillia.acme.rest.exception.HTTPMethodNotImplemeted;
 import com.invillia.acme.rest.exception.ValidationException;
+import com.invillia.acme.rest.filter.StoreFilter;
 import com.invillia.acme.rest.handler.RestRequestHandler;
 import com.invillia.acme.rest.handler.resource.RestResourceHandler;
 import com.invillia.acme.rest.model.Store;
@@ -33,61 +31,40 @@ public class StoreRequestHandlerImpl extends RestRequestHandler implements RestR
 		super(parent);
 	}
 
-	public JSONObject handlePost(HttpRequest request, Context context) {
+	public JSONObject handlePost(HttpRequest request, Context context) throws DataAccessException, ValidationException {
 
 		JSONObjectResponseBuilder responseBuilder = null;
 
-		String requestBody = (String) request.getBody();
-		JSONObject storeJSONObject;
-		try {
-			if (!StringUtils.isNullOrEmpty(requestBody)) {
-				storeJSONObject = (JSONObject) PARSER.parse((String) request.getBody());
-			} else {
-				storeJSONObject = null;
-			}
-			if (storeJSONObject == null) {
+		JSONObject requestBody = request.getBody();
+
+			if (requestBody == null) {
 				ValidationException ve = new ValidationException();
-				ve.addMessage("body is missing");
+				ve.addMessage("request body is missing. It should contain Json data for store creation.");
 				responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, ve);
 			} else {
-				Store store = storeService.createOrUpdate(transferObject.toPojo(storeJSONObject));
+				Store store = storeService.createOrUpdate(transferObject.toModel(requestBody));
 
 				List<JSONObject> storeJSONObjectList = new ArrayList<JSONObject>();
 				storeJSONObjectList.add(transferObject.toJsonObject(store));
 				responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_CREATED, null, storeJSONObjectList, null);
 
 			}
-		} catch (DataAccessException e) {
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_INTERNAL_SERVER_ERROR, null, null, e);
-		} catch (ValidationException e) {
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, e);
-		} catch (ParseException e) {
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, e);
-		}
+
 		return responseBuilder.build();
 	}
 
-	private JSONObject handleGet(HttpRequest request, Context context) {
+	private JSONObject handleGet(HttpRequest request, Context context) throws DataAccessException {
 		JSONObjectResponseBuilder responseBuilder = null;
 
-		Store storeQuery = new Store();
-		if (!StringUtils.isNullOrEmpty(request.getQueryStringParameters().get("address"))) {
-			storeQuery.setAddress((String) request.getQueryStringParameters().get("address"));
-		}
-		if (!StringUtils.isNullOrEmpty(request.getQueryStringParameters().get("name"))) {
-			storeQuery.setName((String) request.getQueryStringParameters().get("name"));
-		}
-		try {
-			List<Store> stores = this.storeService.query(storeQuery);
+		StoreFilter filter = transferObject.toFilter(request.getQueryStringParameters(), request.getPathParameters());
+			List<Store> stores = this.storeService.query(filter);
 			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_OK, null, transferObject.toJsonObjectList(stores), null);
-		} catch (DataAccessException e) {
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_INTERNAL_SERVER_ERROR, null, null, e);
-		}
+
 		return responseBuilder.build();
 	}
 
 	@Override
-	public JSONObject executeMethod(HttpRequest request, Context context) {
+	public JSONObject executeMethod(HttpRequest request, Context context) throws DataAccessException, ValidationException  {
 
 		switch (request.getHttpMethod()) {
 		case (HttpRequest.HTTP_METHOD_POST):

@@ -5,10 +5,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Map;
 import java.io.BufferedReader;
 
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import com.amazonaws.util.StringUtils;
+import com.invillia.acme.rest.exception.DataAccessException;
+import com.invillia.acme.rest.exception.UnhandledContentTypeException;
 import com.invillia.acme.rest.exception.ValidationException;
 import com.invillia.acme.rest.handler.resource.factory.ResourceHandlerFactory;
 import com.invillia.acme.rest.request.HttpRequest;
@@ -26,41 +31,22 @@ public class RestRequestHandler implements RequestStreamHandler {
 	protected static final String API_NAME = "prod";
 
 	public static final String PATH_NAME_KEY = "path";
+	public static final String RESOURCE_NAME_KEY = "resource";
 	public static final String HTTP_METHOD_NAME_KEY = "httpMethod";
+	public static final String HEADERS_KEY = "headers";
+	public static final String CONTENT_TYPE_KEY = "Content-Type";
 	public static final String QUERY_STRING_PARAMETERS_KEY = "queryStringParameters";
 	public static final String PATH_PARAMETERS_KEY = "pathParameters";
 	public static final String BODY_KEY = "body";
+	public static final DateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	public static final String ACCEPTED_CONTENT_TYPE = "application/json";
 	
 	protected static final JSONParser PARSER = new JSONParser();
-
-	/*public static final String HTTP_METHOD_POST = "POST";
-	public static final String HTTP_METHOD_GET = "GET";
-	public static final String HTTP_METHOD_PUT = "PUT";
-	public static final String HTTP_METHOD_DELETE = "DELETE";*/
-
-
-	/*protected Map<String, String> queryStringParameters = new HashMap<String, String>();
-	protected Map<String, String> pathParameters = new HashMap<String, String>();
-	protected String path = "";
-	protected String httpMethod = "";*/
-	
 	protected HttpRequest httpRequest = new HttpRequest();
-	
 	protected JSONObject input;
 	
 	
-	/*public RestRequestHandler(RestRequestHandler parent) {
-		this.httpMethod = parent.httpMethod;
-		this.pathParameters = parent.pathParameters;
-		this.queryStringParameters = parent.queryStringParameters;
-		this.path = parent.path;
-	}*/
-	
 	public RestRequestHandler(RestRequestHandler parent) {
-		/*this.httpMethod = parent.httpMethod;
-		this.pathParameters = parent.pathParameters;
-		this.queryStringParameters = parent.queryStringParameters;
-		this.path = parent.path;*/
 		this.httpRequest = parent.httpRequest;
 	}
 	
@@ -70,41 +56,53 @@ public class RestRequestHandler implements RequestStreamHandler {
 	
 	public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
 
+		httpRequest = new HttpRequest();
 		LambdaLogger logger = context.getLogger();
 		logger.log("Loading Java Lambda handler of ProxyWithStream");
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-		JSONObject responseJson = new JSONObject();
+		JSONObject responseJson = null;
 
 		try {
-
-			// EVENT
-			//JSONObject request = (JSONObject) PARSER.parse(reader);
 			input = (JSONObject) PARSER.parse(reader);
-			System.out.println("---------------- input (BEGIN) ---------------- ");
+			System.out.println("RestRequestHandler.handleRequest(InputStream, OutputStream, Context): input: ");
 			System.out.println(input);
-			System.out.println("---------------- input (END) ---------------- ");
 
-			System.out.println("---------------- path (BEGIN) ---------------- ");
-			System.out.println(input.get(PATH_NAME_KEY));
-			System.out.println("---------------- path (END) ---------------- ");
+			this.setHeaders();
+			UnhandledContentTypeException uctException = null;
+			if (httpRequest.getHeaders() == null ||
+				!ACCEPTED_CONTENT_TYPE.equals(httpRequest.getHeaders().get(CONTENT_TYPE_KEY))) {
+				uctException = new UnhandledContentTypeException(httpRequest.getHeaders().get(ACCEPTED_CONTENT_TYPE));
+			}
+					
+			if (uctException != null) {
+				responseJson = new JSONObjectResponseBuilder(HttpStatus.SC_UNSUPPORTED_MEDIA_TYPE, null, null, uctException).build();
+			} else {
+				this.setMethod();
+				this.setPathParameters();
+				this.setPath();
+				this.setResource();
+				this.setQueryStringParameters();
+				this.setBody();
+				responseJson = new ResourceHandlerFactory(httpRequest.getResource(), this).getImpl().executeMethod(httpRequest, context);
 
-			this.setMethod();
-			this.setPathParameters();
-			this.setPath();
-			this.setQueryStringParameters();
-			this.setBody();
-
-
-			responseJson = new ResourceHandlerFactory(httpRequest.getPath(), this).getImpl().executeMethod(httpRequest, context);
+			}
 
 		} catch (ParseException e) {
-			responseJson = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, e).build();
+			e.printStackTrace();
+			responseJson = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, new Exception("Error parsing request.", e)).build();
 		} catch (ValidationException e) {
+			e.printStackTrace();
 			responseJson = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, e).build();
+		}catch (DataAccessException e) {
+			e.printStackTrace();
+			responseJson = new JSONObjectResponseBuilder(HttpStatus.SC_INTERNAL_SERVER_ERROR, null, null, e).build();
 		}
-
+		catch (Exception e) {
+			e.printStackTrace();
+			responseJson = new JSONObjectResponseBuilder(HttpStatus.SC_INTERNAL_SERVER_ERROR, null, null, e).build();
+		}
 		OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
 		writer.write(responseJson.toJSONString());
 		writer.close();
@@ -112,36 +110,41 @@ public class RestRequestHandler implements RequestStreamHandler {
 
 
 	private void setQueryStringParameters() {
-		// QUERY STRING PARAMETERS
 		if (input.get(QUERY_STRING_PARAMETERS_KEY) != null) {
-			//this.queryStringParameters = (Map<String, String>) request.get(QUERY_STRING_PARAMETERS_KEY);
 			httpRequest.setQueryStringParameters((Map<String,String>)input.get(QUERY_STRING_PARAMETERS_KEY));
-			System.out.println("input.queryStringParameters --> " + httpRequest.getQueryStringParameters());
 		}
 	}
 
 	private void setPathParameters() {
-		// PATH PARAMETERS
 		if (input.get(PATH_PARAMETERS_KEY) != null) {
 			httpRequest.setPathParameters((Map<String, String>) input.get(PATH_PARAMETERS_KEY));
-			System.out.println("input.pathParameters --> " + httpRequest.getPathParameters());
 		}
 	}
 	
 	private void setMethod() {
 		if (input.get(HTTP_METHOD_NAME_KEY) != null) {
 			httpRequest.setHttpMethod ((String) input.get(HTTP_METHOD_NAME_KEY));
-			System.out.println("input.method --> " + httpRequest.getHttpMethod());
 		}
 	}
 	
 	private void setPath() {
 		if (input.get(PATH_NAME_KEY) != null) {
 			httpRequest.setPath ((String) input.get(PATH_NAME_KEY));
-			System.out.println("input.path --> " + httpRequest.getPath() );
 		}
 	}
-	private void setBody() {
-		httpRequest.setBody(input.get("body"));
+	private void setBody() throws ParseException {
+		if (!StringUtils.isNullOrEmpty((String)input.get("body"))) {
+			httpRequest.setBody((JSONObject) PARSER.parse((String)input.get("body")));
+		}
+	}
+	private void setHeaders() {
+		if (input.get(HEADERS_KEY) != null) {
+			httpRequest.setHeaders((Map<String, String>) input.get(HEADERS_KEY));
+		}
+	}
+	private void setResource() {
+		if (input.get(RESOURCE_NAME_KEY) != null) {
+			httpRequest.setResource ((String) input.get(RESOURCE_NAME_KEY));
+		}
 	}
 }

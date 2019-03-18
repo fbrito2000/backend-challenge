@@ -10,21 +10,21 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.util.StringUtils;
-import com.invillia.acme.rest.dao.StoreDAO;
+import com.invillia.acme.rest.dao.PaymentDAO;
 import com.invillia.acme.rest.exception.DataAccessException;
-import com.invillia.acme.rest.filter.StoreFilter;
-import com.invillia.acme.rest.model.Store;
+import com.invillia.acme.rest.filter.PaymentFilter;
+import com.invillia.acme.rest.model.Payment;
 
-public class StoreDynamoDBDAOImpl implements StoreDAO {
+public class PaymentDynamoDBDAOImpl implements PaymentDAO {
 
 	AmazonDynamoDB client;
 
 	DynamoDBMapper mapper;
-
+	
 	@Override
-	public List<Store> query(StoreFilter store) throws DataAccessException {
+	public List<Payment> query(PaymentFilter payment) throws DataAccessException {
 
-		System.out.println("StoreDynamoDBDAOImpl.query(Store) : store --> " + store);
+		System.out.println("PaymentDynamoDBDAOImpl.query(Payment) : payment --> " + payment);
 		
 		client = AmazonDynamoDBClientBuilder.standard().build();
 		mapper = new DynamoDBMapper(client);
@@ -33,44 +33,33 @@ public class StoreDynamoDBDAOImpl implements StoreDAO {
 		Map<String, String> ean = new HashMap<String, String>();
 		String filterExpression = "";
 
-		if (!StringUtils.isNullOrEmpty(store.getName())) {
-			filterExpression = "#1 = :name ";
-			eav.put(":name", new AttributeValue().withS(store.getName()));
-			ean.put("#1", "Name");
+		if (!StringUtils.isNullOrEmpty(payment.getOrderId())) {
+			filterExpression = "#1 = :orderId ";
+			eav.put(":orderId", new AttributeValue().withS(payment.getOrderId()));
+			ean.put("#1", "OrderId");
 		}
-		if (!StringUtils.isNullOrEmpty(store.getAddress())) {
-			if (!StringUtils.isNullOrEmpty(filterExpression)) {
-				filterExpression += " and ";
-			}
-			filterExpression += "#2 = :address ";
-			eav.put(":address", new AttributeValue().withS(store.getAddress()));
-			ean.put("#2", "Address");
-		}
-
+	
 		DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-
-		if (!StringUtils.isNullOrEmpty(filterExpression)) {
+		if (filterExpression != null) { 
 			scanExpression.setFilterExpression(filterExpression);
 			scanExpression.setExpressionAttributeNames(ean);
 			scanExpression.setExpressionAttributeValues(eav);
+			System.out.println("PaymentDynamoDBDAOImpl.query(Payment) : scanExpression --> " + scanExpression);
 		}
-		
-		System.out.println("StoreDynamoDBDAOImpl.query(Store) : scanExpression --> " + scanExpression);
-		return mapper.scan(Store.class, scanExpression);
-
+		return mapper.scan(Payment.class, scanExpression);
 	}
-
+	
 	@Override
-	public Store createOrUpdate(Store store) throws DataAccessException {
-		System.out.println("StoreDynamoDBDAOImpl.create(Store) : store ->> " + store );
+	public Payment createOrUpdate(Payment payment) throws DataAccessException {
+		System.out.println("PaymentDynamoDBDAOImpl.create(Payment) : payment ->> " + payment );
 		client = AmazonDynamoDBClientBuilder.standard().build();
 		mapper = new DynamoDBMapper(client);
 		try {
-			mapper.save(store);
+			mapper.save(payment);
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new DataAccessException(Store.class.getName(), e);
+			throw new DataAccessException(Payment.class.getName(), e);
 		}
-		return store;
+		return payment;
 	}
 }
