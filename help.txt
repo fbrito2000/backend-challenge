@@ -1,0 +1,103 @@
+Desafio Invillia
+
+1- Requirements
+
+Java/AWS SDK 
+Maven
+AWSCli
+
+
+2- Compilation:
+
+	mvn clean install
+
+3- AWS Credentials
+
+	aws_access_key_id = AKIAIAE5F2ZPXUYB7DNQ
+	aws_secret_access_key = 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
+
+4- Testing API:
+
+	4.1 Postman: endpoints: 
+	
+	https://q16zz537xe.execute-api.us-east-1.amazonaws.com/prod/order {GET, POST}
+	https://q16zz537xe.execute-api.us-east-1.amazonaws.com/prod/order/{id} {GET, POST}
+	https://q16zz537xe.execute-api.us-east-1.amazonaws.com/prod/order/{id}/payment {GET, POST}
+	https://q16zz537xe.execute-api.us-east-1.amazonaws.com/prod/store {GET, POST}
+	
+	Headers: use Content-Type:"application/json" AND put the AWS Credintials too.
+	
+	4.2 AWSCli: 
+	
+	type:
+	aws configure
+		!--configure credentials and set region to us-east-1
+	mvn clean install
+	aws lambda update-function-code --function-name InvillaBackendChallengeLambda --zip-file fileb://./target/invillia-0.0.2-SNAPSHOT-jar-with-dependencies.jar
+	aws apigateway test-invoke-method --rest-api-id q16zz537xe --resource-id aa440h --http-method {METHOD} --path-with-query-string "/$resource" --body file://{a_body_file}.json}
+	
+	4.3 - Order (/order)
+	
+	Path params:
+		{id} : Order id identifier: String
+
+	Table: Order {Id, Adrress, Date, Situation, StoreName}
+
+	Query String Parameters
+		initialDate=1900-01-01 00:00:00,
+		finalDate=2020-01-01 00:00:00,
+		storeName=fbrito2000,
+		situation=NOT_PAID
+		
+	Body Example
+		JSON:
+		{"storeName":"fbrito2000",
+		 "date":"1978-10-05 00:00:00",
+		 "address":"13083220"
+		}
+		
+	4.4 - Store (/store)
+
+	Path Parameters
+		{storeName} : id for Store: String
+		
+	Table: Store {StoreName, Address}
+	
+	Query String Parameters
+		storeName=fbrito2000,
+		address=rua tal
+
+	Body Example:
+		JSON:
+		{"storeName":"fbrito2000",
+		 "address":"rua tal"
+		}
+
+	4.5 - Payment (/order{id}/payment)
+
+		Parâmetros de Path
+		{id} : id for Payment: String
+		
+	Tabela: Payment {StoreName, OrderId, CreditCardNumber, Date, Situation}
+	
+	Query String Parameters
+		storeName=fbrito2000,
+		address=rua tal
+
+	Body example:
+		JSON:
+		{"storeName":"fbrito2000",
+		 "orderId":"0ffd3c2a-6f6a-4893-a600-7350b3a355cb"
+		 "creditCardNumber":1111222233334444
+		 "Date":"2019-18-03"
+		}
+
+5 - Project:
+
+	A Rest API with AWS Lambda Proxy
+	
+	
+
+	
+
+
