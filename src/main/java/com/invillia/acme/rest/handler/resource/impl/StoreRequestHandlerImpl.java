@@ -34,21 +34,19 @@ public class StoreRequestHandlerImpl extends RestRequestHandler implements RestR
 	public JSONObject handlePost(HttpRequest request, Context context) throws DataAccessException, ValidationException {
 
 		JSONObjectResponseBuilder responseBuilder = null;
-
 		JSONObject requestBody = request.getBody();
 
-			if (requestBody == null) {
-				ValidationException ve = new ValidationException();
-				ve.addMessage("request body is missing. It should contain Json data for store creation.");
-				responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, ve);
-			} else {
-				Store store = storeService.createOrUpdate(transferObject.toModel(requestBody));
+		if (requestBody == null) {
+			ValidationException ve = new ValidationException();
+			ve.addMessage("request body is missing. It should contain Json data for store creation.");
+			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, ve);
+		} else {
+			Store store = storeService.createOrUpdate(transferObject.toModel(requestBody));
 
-				List<JSONObject> storeJSONObjectList = new ArrayList<JSONObject>();
-				storeJSONObjectList.add(transferObject.toJsonObject(store));
-				responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_CREATED, null, storeJSONObjectList, null);
-
-			}
+			List<JSONObject> storeJSONObjectList = new ArrayList<JSONObject>();
+			storeJSONObjectList.add(transferObject.toJsonObject(store));
+			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_CREATED, null, storeJSONObjectList, null);
+		}
 
 		return responseBuilder.build();
 	}
@@ -57,14 +55,14 @@ public class StoreRequestHandlerImpl extends RestRequestHandler implements RestR
 		JSONObjectResponseBuilder responseBuilder = null;
 
 		StoreFilter filter = transferObject.toFilter(request.getQueryStringParameters(), request.getPathParameters());
-			List<Store> stores = this.storeService.query(filter);
-			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_OK, null, transferObject.toJsonObjectList(stores), null);
+		List<Store> stores = this.storeService.query(filter);
+		responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_OK, null, transferObject.toJsonObjectList(stores), null);
 
 		return responseBuilder.build();
 	}
 
 	@Override
-	public JSONObject executeMethod(HttpRequest request, Context context) throws DataAccessException, ValidationException  {
+	public JSONObject executeMethod(HttpRequest request, Context context) throws DataAccessException, ValidationException {
 
 		switch (request.getHttpMethod()) {
 		case (HttpRequest.HTTP_METHOD_POST):

@@ -5,10 +5,8 @@ import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.util.StringUtils;
 import com.invillia.acme.rest.enums.OrderServiceFactoryEnum;
 import com.invillia.acme.rest.exception.DataAccessException;
 import com.invillia.acme.rest.exception.HTTPMethodNotImplemeted;
@@ -16,7 +14,6 @@ import com.invillia.acme.rest.exception.ValidationException;
 import com.invillia.acme.rest.filter.OrderFilter;
 import com.invillia.acme.rest.handler.RestRequestHandler;
 import com.invillia.acme.rest.handler.resource.RestResourceHandler;
-import com.invillia.acme.rest.model.Order;
 import com.invillia.acme.rest.model.Order;
 import com.invillia.acme.rest.request.HttpRequest;
 import com.invillia.acme.rest.response.JSONObjectResponseBuilder;

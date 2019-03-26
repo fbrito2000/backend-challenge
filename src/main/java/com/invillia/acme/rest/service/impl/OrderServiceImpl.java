@@ -1,6 +1,5 @@
 package com.invillia.acme.rest.service.impl;
 
-import java.util.Date;
 import java.util.List;
 
 import com.invillia.acme.rest.dao.factory.OrderDAOFactory;
@@ -36,11 +35,4 @@ public class OrderServiceImpl implements OrderService {
 	public Order getById(String orderId) throws DataAccessException {
 		return orderDAOFactory.getInstance().getById(orderId);
 	}
-
-	//@Override
-	//public List<Order> query(String storeName, String id, Date initialDate, Date finalDate, String situation) throws DataAccessException {
-	//	return orderDAOFactory.getInstance().query(storeName, id, initialDate, finalDate, situation);
-	//}
-
-	
 }

@@ -1,9 +1,6 @@
 package com.invillia.acme.rest.dao.impl;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -11,28 +8,23 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Index;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
-import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
-import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.util.StringUtils;
 import com.invillia.acme.rest.dao.OrderDAO;
 import com.invillia.acme.rest.exception.DataAccessException;
 import com.invillia.acme.rest.filter.OrderFilter;
+import com.invillia.acme.rest.handler.RestRequestHandler;
 import com.invillia.acme.rest.model.Order;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 public class OrderDynamoDBDAOImpl implements OrderDAO {
 
-	//private static final String SGI_NAME_STORE_NAME_DATE = "StoreName-Date-index";
-	//private static final String SGI_NAME_STORE_NAME_ORDER_ID = "StoreName-Id-index";
-	//private static final String TABLE_NAME = Order.class.getName();
-
+	private LambdaLogger logger = RestRequestHandler.logger;
+	
 	AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
 	DynamoDBMapper mapper = new DynamoDBMapper(client);
 
@@ -44,9 +36,9 @@ public class OrderDynamoDBDAOImpl implements OrderDAO {
 		try {
 			result = mapper.load(query);
 			if (result != null) {
-				System.out.println("[ORDER - getById] Order Information " + result);
+				logger.log("[ORDER - getById] Found Order Information " + result);
 			} else {
-				System.out.println("No order found");
+				logger.log("No order found");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -70,10 +62,7 @@ public class OrderDynamoDBDAOImpl implements OrderDAO {
 
 	public List<Order> query(OrderFilter filter) throws DataAccessException {
 
-		System.out.println("OrderDynamoDBDAOImpl.query(Order) : order --> " + filter);
-
-		client = AmazonDynamoDBClientBuilder.standard().build();
-		mapper = new DynamoDBMapper(client);
+		logger.log("OrderDynamoDBDAOImpl.query(Order) : order --> \n " + filter);
 
 		Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>();
 		Map<String, String> ean = new HashMap<String, String>();
@@ -100,21 +89,16 @@ public class OrderDynamoDBDAOImpl implements OrderDAO {
 			eav.put(":situation", new AttributeValue().withS(filter.getSituation()));
 			ean.put("#3", "Situation");
 		}
-		if (filter.getInitialDate() == null) {
-			filter.setInitialDate(new Date(0));
-		}
-		if (filter.getFinalDate() == null) {
-			filter.setFinalDate(new Date());
+		if (filter.getInitialDate() != null && filter.getFinalDate() == null) {
+			if (!StringUtils.isNullOrEmpty(filterExpression)) {
+				filterExpression += " and ";
+			}
+			filterExpression += "#4 between :initialDate and :finalDate";
+			eav.put(":initialDate", new AttributeValue().withN(String.valueOf(filter.getInitialDate().getTime())));
+			eav.put(":finalDate", new AttributeValue().withN(String.valueOf(filter.getFinalDate().getTime())));
+			ean.put("#4", "Date");
 		}
 
-		if (!StringUtils.isNullOrEmpty(filterExpression)) {
-				filterExpression += " and ";
-		}
-		filterExpression += "#4 between :initialDate and :finalDate";
-		eav.put(":initialDate", new AttributeValue().withN(String.valueOf(filter.getInitialDate().getTime())));
-		eav.put(":finalDate", new AttributeValue().withN(String.valueOf(filter.getFinalDate().getTime())));
-		ean.put("#4", "Date");
-	
 		DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
 
 		if (!StringUtils.isNullOrEmpty(filterExpression)) {
@@ -123,18 +107,33 @@ public class OrderDynamoDBDAOImpl implements OrderDAO {
 			scanExpression.setExpressionAttributeValues(eav);
 		}
 
-		System.out.println("OrderDynamoDBDAOImpl.query(Order) : scanExpression --> " + scanExpression);
 		return mapper.scan(Order.class, scanExpression);
+	}
+
+	public AmazonDynamoDB getClient() {
+		return client;
+	}
+
+	public void setClient(AmazonDynamoDB client) {
+		this.client = client;
+	}
+
+	public DynamoDBMapper getMapper() {
+		return mapper;
+	}
+
+	public void setMapper(DynamoDBMapper mapper) {
+		this.mapper = mapper;
 	}
 
 	/*public List<Order> query(String storeName, String id, Date initialDate, Date finalDate, String situation) throws DataAccessException {
 
-		System.out.println("OrderDynamoDBDAOImpl.query(String, String, Date, Date, String)\n");
-		System.out.println("OrderDynamoDBDAOImpl.query: storeName --> " + storeName);
-		System.out.println("OrderDynamoDBDAOImpl.query: id --> " + id);
-		System.out.println("OrderDynamoDBDAOImpl.query: initialDate -->" + initialDate);
-		System.out.println("OrderDynamoDBDAOImpl.query: finalDate -->" + finalDate);
-		System.out.println("OrderDynamoDBDAOImpl.query: situation -->" + situation);
+		logger.info("OrderDynamoDBDAOImpl.query(String, String, Date, Date, String)\n");
+		logger.info("OrderDynamoDBDAOImpl.query: storeName --> " + storeName);
+		logger.info("OrderDynamoDBDAOImpl.query: id --> " + id);
+		logger.info("OrderDynamoDBDAOImpl.query: initialDate -->" + initialDate);
+		logger.info("OrderDynamoDBDAOImpl.query: finalDate -->" + finalDate);
+		logger.info("OrderDynamoDBDAOImpl.query: situation -->" + situation);
 		
 		DynamoDB dynamoDB = new DynamoDB(client);
 
@@ -165,7 +164,7 @@ public class OrderDynamoDBDAOImpl implements OrderDAO {
 			order.setId(item.getString("Id"));
 			order.setSituation(item.getString("Situation"));
 			order.setStoreName(item.getJSON("StoreName"));
-			System.out.println("OrderDynamoDBDAOImpl.query: [result from query] order -->" + order);
+			logger.info("OrderDynamoDBDAOImpl.query: [result from query] order -->" + order);
 			if (!StringUtils.isNullOrEmpty(situation)) {
 				if (situation.equals(order.getSituation())) {
 					result.add(order);		
@@ -176,9 +175,9 @@ public class OrderDynamoDBDAOImpl implements OrderDAO {
 	}
 	
 	public boolean exists(String storeName, String id) {
-		System.out.println("OrderDynamoDBDAOImpl.query(String, String)\n");
-		System.out.println("OrderDynamoDBDAOImpl.query: storeName --> " + storeName);
-		System.out.println("OrderDynamoDBDAOImpl.query: id --> " + id);
+		logger.info("OrderDynamoDBDAOImpl.query(String, String)\n");
+		logger.info("OrderDynamoDBDAOImpl.query: storeName --> " + storeName);
+		logger.info("OrderDynamoDBDAOImpl.query: id --> " + id);
 	
 		DynamoDB dynamoDB = new DynamoDB(client);
 		Table table = dynamoDB.getTable(TABLE_NAME);
@@ -195,7 +194,7 @@ public class OrderDynamoDBDAOImpl implements OrderDAO {
 		
 		//List<Item> result = new ArrayList<Item>();
 		ItemCollection<QueryOutcome> items = index.query(spec);
-		System.out.println("OrderDynamoDBDAOImpl.items.: [result from query] size -->" + items.getAccumulatedItemCount());
+		logger.info("OrderDynamoDBDAOImpl.items.: [result from query] size -->" + items.getAccumulatedItemCount());
 		if (items.getAccumulatedItemCount() > 0) {
 			return true;
 		} else return false;

@@ -21,9 +21,6 @@ public class OrderTO {
 	
 	public Order toModel(JSONObject body, Map<String,String> pathParameters, boolean isUpdate) throws ValidationException {
 		
-		System.out.println("OrderTO.toModel(JSONObject, boolean) --> body:\n" + body);
-		System.out.println("OrderTO.toModel(JSONObject, boolean) --> isUpdate:\n" + isUpdate);
-
 		//validate JSON request body Input
 		List<String> messages = new ArrayList<String>();
 		if (pathParameters.get("id") == null && isUpdate) {
@@ -64,8 +61,6 @@ public class OrderTO {
 	}
 
 	public OrderFilter toFilter(Map queryStringParameters, Map pathParameters) throws ValidationException {
-		
-		System.out.println("OrderTO.toModel(Map) --> queryStringParameters:\n" + queryStringParameters);
 
 		//create the filter object
 		OrderFilter filter = new OrderFilter();

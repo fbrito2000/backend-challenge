@@ -21,8 +21,6 @@ public class PaymentTO {
 
 	public Payment toModel(JSONObject body, Map<String, String> pathParameters) throws ValidationException {
 
-		System.out.println("Payment.toModel(JSONObject): body --> \n" + body);
-		// validate JSON request body Input
 		List<String> messages = new ArrayList<String>();
 		if (pathParameters.get("id") == null) {
 			messages.add("payment: could not decode path parameter '{id}'.");
@@ -51,14 +49,11 @@ public class PaymentTO {
 		payment.setCreditCardNumber((Long) body.get("creditCardNumber"));
 		payment.setSituation(PaymentSituationEnum.PAID.name());
 
-		System.out.println("Payment.toModel(JSONObject): payment --> \n" + payment);
 		return payment;
 	}
 
 	public PaymentFilter toFilter(Map queryStringParameters, Map pathParameters) throws ValidationException {
 
-		System.out.println("PaymentTO.toFilter(Map) --> queryStringParameters:\n" + queryStringParameters);
-		System.out.println("PaymentTO.toFilter(Map) --> pathParameters:\n" + pathParameters);
 		// validate JSON request body Input
 		// create the filter object
 		PaymentFilter filter = new PaymentFilter();
@@ -74,7 +69,6 @@ public class PaymentTO {
 		filter.setCreditCardNumber((Long) queryStringParameters.get("creditCardNumber"));
 		filter.setSituation((String) queryStringParameters.get("situation"));
 
-		System.out.println("PaymentTO.toFilter(Map):  --> filter:\n" + filter);
 		return filter;
 
 	}

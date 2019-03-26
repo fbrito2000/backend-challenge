@@ -28,6 +28,8 @@ import org.json.simple.parser.JSONParser;
 
 public class RestRequestHandler implements RequestStreamHandler {
 
+	public static LambdaLogger logger;
+
 	protected static final String API_NAME = "prod";
 
 	public static final String PATH_NAME_KEY = "path";
@@ -40,11 +42,10 @@ public class RestRequestHandler implements RequestStreamHandler {
 	public static final String BODY_KEY = "body";
 	public static final DateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	public static final String ACCEPTED_CONTENT_TYPE = "application/json";
-	
+
 	protected static final JSONParser PARSER = new JSONParser();
 	protected HttpRequest httpRequest = new HttpRequest();
 	protected JSONObject input;
-	
 	
 	public RestRequestHandler(RestRequestHandler parent) {
 		this.httpRequest = parent.httpRequest;
@@ -57,17 +58,15 @@ public class RestRequestHandler implements RequestStreamHandler {
 	public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
 
 		httpRequest = new HttpRequest();
-		LambdaLogger logger = context.getLogger();
+		RestRequestHandler.logger = context.getLogger();
 		logger.log("Loading Java Lambda handler of ProxyWithStream");
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
 		JSONObject responseJson = null;
 
 		try {
 			input = (JSONObject) PARSER.parse(reader);
-			System.out.println("RestRequestHandler.handleRequest(InputStream, OutputStream, Context): input: ");
-			System.out.println(input);
+			logger.log("RestRequestHandler.handleRequest(InputStream, OutputStream, Context): input: \n" + input) ;
 
 			this.setHeaders();
 			UnhandledContentTypeException uctException = null;
@@ -86,9 +85,7 @@ public class RestRequestHandler implements RequestStreamHandler {
 				this.setQueryStringParameters();
 				this.setBody();
 				responseJson = new ResourceHandlerFactory(httpRequest.getResource(), this).getImpl().executeMethod(httpRequest, context);
-
 			}
-
 		} catch (ParseException e) {
 			e.printStackTrace();
 			responseJson = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, new Exception("Error parsing request.", e)).build();

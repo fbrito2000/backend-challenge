@@ -5,10 +5,8 @@ import java.util.List;
 
 import org.apache.http.HttpStatus;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.util.StringUtils;
 import com.invillia.acme.rest.enums.PaymentServiceFactoryEnum;
 import com.invillia.acme.rest.exception.DataAccessException;
 import com.invillia.acme.rest.exception.HTTPMethodNotImplemeted;
@@ -16,7 +14,6 @@ import com.invillia.acme.rest.exception.ValidationException;
 import com.invillia.acme.rest.filter.PaymentFilter;
 import com.invillia.acme.rest.handler.RestRequestHandler;
 import com.invillia.acme.rest.handler.resource.RestResourceHandler;
-import com.invillia.acme.rest.model.Payment;
 import com.invillia.acme.rest.model.Payment;
 import com.invillia.acme.rest.request.HttpRequest;
 import com.invillia.acme.rest.response.JSONObjectResponseBuilder;
@@ -45,7 +42,6 @@ public class PaymentRequestHandlerImpl extends RestRequestHandler implements Res
 			ve.addMessage("request body is missing. It should contain Json data for payment creation.");
 			responseBuilder = new JSONObjectResponseBuilder(HttpStatus.SC_BAD_REQUEST, null, null, ve);
 		} else {
-			System.out.println("PaymentRequestHandlerImpl.handlePost(HttpRequest, Context): request.getPathParameters --> " + request.getPathParameters());
 			Payment payment = paymentService.createOrUpdate(transferObject.toModel(requestBody, request.getPathParameters()));
 			List<JSONObject> paymentJSONObjectList = new ArrayList<JSONObject>();
 			paymentJSONObjectList.add(transferObject.toJsonObject(payment));

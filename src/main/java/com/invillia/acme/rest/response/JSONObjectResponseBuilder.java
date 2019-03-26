@@ -44,14 +44,13 @@ public class JSONObjectResponseBuilder {
 		responseJson.put("statusCode", String.valueOf(statusCode));
 		responseJson.put("headers", headerJson);
 		responseJson.put("body", responseBody.toString());
-
 	}
 
 	public JSONObject build() {
 		return responseJson;
 	}
 	
-   private static String stackTraceToString(Throwable t) {
+   private  String stackTraceToString(Throwable t) {
        String result = t.toString() + "\n";
        StackTraceElement[] trace = t.getStackTrace();
        for (int i=0;i<trace.length;i++) {
